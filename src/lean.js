@@ -70,6 +70,7 @@ const plain = {};
 
 export function connectLean(options=plain) {
     return connectAdvanced(dispatch => {
+        const fulledStateCache = createCache();
         const scopedStateCache = createCache();
         const mappedStateCache = createCache({initial: null});
         const propsCache = createCache();
@@ -109,6 +110,7 @@ export function connectLean(options=plain) {
 
             const props = propsCache({...options.defaultProps, ...ownProps, scope});
             var scopedState = fullState || plain;
+            var fulledState = fullState || plain;
 
             if (!isEmpty(scope)) {
                 scopedState = {...getOr(plain, disableLodashPath(scope), fullState)};
@@ -121,6 +123,7 @@ export function connectLean(options=plain) {
                 initialState = options.getInitialState.call(handlerContext);
             }
 
+            fulledState = fulledStateCache({...initialState, ...fulledState});
             scopedState = scopedStateCache({...initialState, ...scopedState});
             handlerContext.state = scopedState;
 
@@ -131,8 +134,8 @@ export function connectLean(options=plain) {
 
             while (true) {
                 const mapStateUsesProps = mapState.length > 1;
-                if (mappedStateCache.get() === null || scopedStateCache.changed || (propsCache.changed && mapStateUsesProps)) {
-                    const mappedState =  mapState(scopedState, props);
+                if (mappedStateCache.get() === null || fulledStateCache.changed || (propsCache.changed && mapStateUsesProps)) {
+                    const mappedState = mapState(fulledState, props);
                     if (typeof mappedState === "function") {
                         // Map state was a map state creator. Update mapState and redo this.
                         mapState = mappedState;
