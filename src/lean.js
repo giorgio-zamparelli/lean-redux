@@ -223,7 +223,12 @@ export function leanReducer(state, action) {
             update = update(s, props);
         }
 
-        return {...initialState, ...state, ...update};
+        if (typeof update === "object" && Object.keys(update).length === 0) {
+            return {...initialState};
+        } else {
+            return {...initialState, ...state, ...update};
+        }
+
     };
 
 
